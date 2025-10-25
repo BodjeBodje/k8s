@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: nginx-deploy-rs
+  labels:
+    app: nginx-deploy
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx-deploy
+  template:
+    metadata:
+      labels:
+        app: nginx-deploy
+    spec:
+      containers:
+      - image: nginx:stable-alpine3.21-perl
+        name: nginx-deploy
+        resources: {}
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always

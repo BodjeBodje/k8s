@@ -1,0 +1,97 @@
+#header - api version and kind
+
+apiVersion: apps/v1
+kind: Deployment
+
+#metadata section with name, labels, and annotations
+metadata:
+  name: mysql
+  labels:
+    app: mysql
+    tier: database
+    version: "8.0"
+  annotations:
+    description: "MySQL Deployment"
+    maintainer: "Your Name <your.email@example.com>"
+    documentation: "https://dev.mysql.com/doc/"
+  finalizers:
+    - foregroundDeletion
+
+#deployment spec section
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: mysql
+      tier: database
+  template: #pod details
+    metadata:
+      labels:
+        app: mysql
+        tier: database
+        version: "8.0"
+    spec:
+      securityContext:
+        runAsUser: 999
+        runAsGroup: 999
+        runAsNonRoot: true
+        fsGroup: 2001
+      containers:
+      - name: mysql
+        image: mysql:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: root_password
+        - name: MYSQL_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: mysql-config
+              key: app-database
+        - name: MYSQL_USER
+          valueFrom:
+            configMapKeyRef:
+              name: mysql-config
+              key: mysql-user
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: mysql_password
+        ports:
+        - name: mysql
+          containerPort: 3306
+          protocol: TCP
+        resources: #Define pod resource requests and limits
+          requests:
+            memory: "256Mi" #debibytes/gibibytes
+            cpu: "250m"     #millicores
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - mysqladmin ping -h localhost -u exampleuser -pMYSQL_ROOT_PASSWORD
+          initialDelaySeconds: 30 #wait 30 seconds after container starts before probing
+          periodSeconds: 10       #probe every 10 seconds
+          timeoutSeconds: 5       #probe times out after 5 seconds
+          failureThreshold: 3     #after 3 failures, container is considered unhealthy
+        readinessProbe:
+          tcpSocket:
+            port: 3306
+          initialDelaySeconds: 30 #wait 30 seconds after container starts before probing
+          periodSeconds: 10       #probe every 10 seconds
+          timeoutSeconds: 5       #probe times out after 5 seconds
+          failureThreshold: 3     #after 3 failures, container is considered unhealthy
