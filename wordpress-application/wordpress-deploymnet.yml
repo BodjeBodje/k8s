@@ -1,0 +1,109 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpress-service
+  labels:
+    app: wordpress
+    tier: frontend
+    version: "1.0"
+
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: wordpress
+    tier: frontend
+  type: LoadBalancer
+
+---
+#header - api version and kind
+
+apiVersion: apps/v1
+kind: Deployment
+
+#metadata section with name, labels, and annotations
+metadata:
+  name: wordpress-deployment
+  labels:
+    app: wordpress
+    tier: frontend
+    version: "1.0"
+  annotations:
+    description: "WordPress Deployment"
+    maintainer: "Your Name <your.email@example.com>"
+    documentation: "https://wordpress.org/support/article/installing-wordpress/wordpress-requirements/"
+  finalizers:
+    - foregroundDeletion
+
+#deployment spec section
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: wordpress
+      tier: frontend
+  template: #pod details
+    metadata:
+      labels:
+        app: wordpress
+        tier: frontend
+        version: "1.0"
+    spec:
+      securityContext:
+        runAsUser: 33
+        runAsGroup: 33
+        runAsNonRoot: true
+        fsGroup: 33
+      containers:
+      - name: wordpress
+        image: wordpress:latest
+        imagePullPolicy: IfNotPresent
+
+        env:
+        - name: WORDPRESS_DB_HOST
+          value: mysql-service:3306
+        - name: WORDPRESS_DB_USER
+          value: root
+        - name: WORDPRESS_DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: mysql-configmap
+              key: app-database
+        - name: WORDPRESS_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: root_password
+        ports:
+        - name: http
+          containerPort: 80
+          protocol: TCP
+        resources: #Define pod resource requests and limits
+          requests:
+            memory: "512Mi" #debibytes/gibibytes
+            cpu: "500m"     #millicores
+          limits:
+            memory: "1024Mi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 120
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /wp-login.php
+            port: 80
+          initialDelaySeconds: 120
+          periodSeconds: 30

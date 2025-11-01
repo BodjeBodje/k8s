@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: phpmyadmin
+  labels:
+    app: "phpmyadmin"
+    tier: admin
+    version: "1.0"
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: "phpmyadmin"
+    tier: admin
+  type: LoadBalancer
+---
+#header - api version and kind
+apiVersion: apps/v1
+kind: Deployment
+#metadata section with name, labels, and annotations
+metadata:
+  name: phpmyadmin
+  labels:
+    app: "phpmyadmin"
+    tier: admin
+    version: "1.0"
+  annotations:
+    description: "phpmyadmin app Deployment for PROD environment"
+    maintainer: "Devops team - Bouriah, bouriahdiallo93@gmail.com"
+    documentation: "https://www.phpmyadmin.net/docs/"
+  finalizers:
+    - foregroundDeletion
+#deployment spec section
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: "phpmyadmin"
+      tier: admin
+  template: #pod details
+    metadata:
+      labels:
+        app: "phpmyadmin"
+        tier: admin
+        version: "1.0"
+    spec:
+      containers:
+      - name: phpmyadmin
+        image: phpmyadmin:latest
+        ports:
+        - containerPort: 80
+        env:
+        - name: PMA_HOST
+          value: mysql-service
+        - name: PMA_PORT
+          value: "3306"
+        # - name: PMA_USER
+        #   value: mysqluser
+        # - name: PMA_PASSWORD
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: mysql-secret
+        #       key: root_password

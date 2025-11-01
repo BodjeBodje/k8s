@@ -1,0 +1,11 @@
+kubectl run nginx --image=nginx:latest
+kubectl get pod nginx
+kubectl get pod nginx -o yaml
+kubectl get pod nginx -o yaml | grep serviceAccountName
+kubectl exec -it nginx -- /bin/bash
+kubectl describe sa default
+kubectl apply -f sa.yml
+kubectl apply -f role.yml
+kubectl apply -f rolebinding.yml
+kubectl get pod my-service-account -n class24-rbac -o yaml
+kubectl -n class24-rbac auth can-i list pods --as=system:serviceaccount:class24-rbac:my-service-account

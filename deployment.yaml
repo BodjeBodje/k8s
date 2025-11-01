@@ -1,19 +1,54 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nginx-deploy
+  name: nginx-deploy
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: nginx-deploy
+  type: NodePort
+status:
+  loadBalancer: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nginx-deploy
+  name: nginx-deploy
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: nginx-deploy
+  type: LoadBalancer
+status:
+  loadBalancer: {}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: nginx=deploy
-  name: nginx=deploy
+    app: nginx-deploy
+  name: nginx-deploy
 spec:
-  replicas: 3
+  replicas: 0
   selector:
     matchLabels:
-      app: nginx=deploy
+      app: nginx-deploy
   strategy: {}
   template:
     metadata:
       labels:
-        app: nginx=deploy
+        app: nginx-deploy
     spec:
       containers:
       - image: nginx:latest

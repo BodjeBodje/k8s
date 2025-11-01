@@ -1,3 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-service
+  labels:
+    app: mysql
+    tier: database
+    version: "8.0"
+spec:
+  ports:
+  - port: 3306 
+    protocol: TCP
+    targetPort: 3306
+  selector:
+    app: mysql
+    tier: database
+  type: ClusterIP
+---
 #header - api version and kind
 
 apiVersion: apps/v1
@@ -41,7 +59,7 @@ spec:
         runAsUser: 999
         runAsGroup: 999
         runAsNonRoot: true
-        fsGroup: 2001
+        fsGroup: 999
       containers:
       - name: mysql
         image: mysql:latest
@@ -55,12 +73,12 @@ spec:
         - name: MYSQL_DATABASE
           valueFrom:
             configMapKeyRef:
-              name: mysql-config
+              name: mysql-configmap
               key: app-database
         - name: MYSQL_USER
           valueFrom:
             configMapKeyRef:
-              name: mysql-config
+              name: mysql-configmap
               key: mysql-user
         - name: MYSQL_PASSWORD
           valueFrom:
@@ -77,13 +95,13 @@ spec:
             cpu: "250m"     #millicores
           limits:
             memory: "512Mi"
-            cpu: "500m"
+            cpu: "1"
         livenessProbe:
           exec:
             command:
             - /bin/sh
             - -c
-            - mysqladmin ping -h localhost -u exampleuser -pMYSQL_ROOT_PASSWORD
+            - mysqladmin ping -h localhost -u root -pMYSQL_ROOT_PASSWORD
           initialDelaySeconds: 30 #wait 30 seconds after container starts before probing
           periodSeconds: 10       #probe every 10 seconds
           timeoutSeconds: 5       #probe times out after 5 seconds
