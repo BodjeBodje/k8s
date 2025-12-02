@@ -1,33 +1,33 @@
 #storage class (identify the storage to use)
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
+apiVersion: {{ .Values.storageClass.apiVersion }}
+kind: {{ .Values.storageClass.kind }}
 metadata:
-  name: mysql-storage-class
-provisioner: kubernetes.io/host-path
-volumeBindingMode: Immediate #bind volume immediately
+  name: {{ .Values.storageClass.metadata.name }}
+provisioner: {{ .Values.storageClass.provisioner }}
+volumeBindingMode: {{ .Values.storageClass.volumeBindingMode }} #bind volume immediately
 ---
 #persistent volume (define storage for mysql)
-apiVersion: v1
-kind: PersistentVolume
+apiVersion: {{ .Values.persistentVolume.apiVersion }}
+kind: {{ .Values.persistentVolume.kind }}
 metadata:
-  name: mysql-pv
+  name: {{ .Values.persistentVolume.metadata.name }}
   labels:
     app: mysql
 spec:
   capacity:
-    storage: 1Gi
+    storage: {{ .Values.persistentVolume.capacity.storage }}
   accessModes:
-    - ReadWriteOnce #volume can be mounted as read-write by a single node
+    - {{ toYaml .Values.persistentVolume.accessModes | indent 4 }} #volume can be mounted as read-write by a single node
   persistentVolumeReclaimPolicy: Retain #retain volume after claim is deleted
   storageClassName: mysql-storage-class
   hostPath:
-    path: /mnt/data/mysql #path to the host directory taped minikube ssh to check your path
+    path: {{ .Values.persistentVolume.hostPath.path }} #path to the host directory taped minikube ssh to check your path
 ---
 #persistent volume claim (request storage for mysql)
-apiVersion: v1
-kind: PersistentVolumeClaim
+apiVersion: {{ .Values.pvc.apiVersion }}
+kind: {{ .Values.pvc.kind }}
 metadata:
-  name: mysql-pvc
+  name: {{ .Values.pvc.metadata.name }}
   labels:
     app: mysql
 spec:
@@ -42,19 +42,19 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: mysql-service
+  name: "{{ .Values.mysqlService.metadata.name }}"
   labels:
-    app: mysql
-    tier: database
-    version: "8.0"
+    app: "{{ .Values.mysqlService.metadata.name }}"
+    tier: "{{ .Values.mysqlService.metadata.tier }}"
+    version: "{{ .Values.mysqlService.metadata.version }}"
 spec:
   ports:
-  - port: 3306 
+  - port: {{ .Values.mysqlService.port }}
     protocol: TCP
-    targetPort: 3306
+    targetPort: {{ .Values.mysqlService.port }}
   selector:
-    app: mysql
-    tier: database
+    app: "{{ .Values.mysqlService.metadata.name }}"
+    tier: "{{ .Values.mysqlService.metadata.tier }}"
   type: ClusterIP
 ---
 #header - api version and kind
@@ -64,11 +64,11 @@ kind: Deployment
 
 #metadata section with name, labels, and annotations
 metadata:
-  name: mysql
+  name: "{{ .Values.mysqlDeployment.labels.name }}"
   labels:
-    app: mysql
-    tier: database
-    version: "8.0"
+    app: "{{ .Values.mysqlDeployment.labels.name }}"
+    tier: "{{ .Values.mysqlDeployment.labels.tier }}"
+    version: "{{ .Values.mysqlDeployment.labels.version }}"
   annotations:
     description: "MySQL Deployment"
     maintainer: "Your Name <your.email@example.com>"
@@ -78,8 +78,8 @@ metadata:
 
 #deployment spec section
 spec:
-  replicas: 1
-  revisionHistoryLimit: 10
+  replicas: {{ .Values.mysqlDeployment.spec.replicas }}
+  revisionHistoryLimit: {{ .Values.mysqlDeployment.spec.revisionHistoryLimit | default 10 }}
   strategy:
     type: RollingUpdate
     rollingUpdate:

@@ -1,0 +1,53 @@
+storageClass:
+  apiVersion: storage.k8s.io/v1
+  kind: StorageClass
+  metadata:
+    name: mysql-storage-class
+  provisioner: kubernetes.io/no-provisioner
+  volumeBindingMode: Immediate #bind volume immediately
+
+persistentVolume:
+  apiVersion: v1
+  kind: PersistentVolume
+  metadata:
+    name: mysql-pv-helm
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce #volume can be mounted as read-write by a single node
+    #- ReadOnlyMany
+  persistentVolumeReclaimPolicy: Retain #retain volume after claim is deleted
+  hostPath:
+    path: /mnt/data/mysql #path to the host directory taped minikube ssh to check your path
+  #persistentVolumeReclaimPolicy: Retain #retain volume after claim is deleted
+
+pvc:
+  apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: mysql-pvc-helm
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: mysql-storage-class
+
+#mysql service values
+mysqlService:
+  metadata:
+    name: mysql-service-helm
+    tier: database
+    version: "8.0"
+  name: mysql-service-helm
+  port: 3306
+
+mysqlDeployment:
+  replicas: 1
+  labels:
+    name: mysqldeployment
+    tier: database
+    version: "8.0"
+  spec:
+    replicas: 1
+    revisionHistoryLimit: 10

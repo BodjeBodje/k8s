@@ -1,0 +1,31 @@
+-PACKAGE INSTALLATION
+https://helm.sh/docs/intro/install/
+  sudo apt-get install curl gpg apt-transport-https --yes
+  curl -fsSL https://packages.buildkite.com/helm-linux/helm-debian/gpgkey | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
+  echo "deb [signed-by=/usr/share/keyrings/helm.gpg] https://packages.buildkite.com/helm-linux/helm-debian/any/ any main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+  sudo apt-get update
+  sudo apt-get install helm
+-Create
+  helm create sample_chart
+    Chart.yaml
+    values.yaml
+    charts/
+    templates/
+    mysql_deployment.yaml
+    mysql_service.yaml
+    mysql_configmap.yaml
+    mysql_secret.yaml
+    phpmyadmin_deployment.yaml
+    wordpress_deployment.yaml
+-Install
+helm install my-release sample_chart/
+-List
+helm list
+-Upgrade
+helm upgrade my-release sample_chart/
+-Rollback
+helm rollback my-release 1
+-Uninstall
+helm uninstall my-release
+-Help
+helm help 
